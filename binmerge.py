@@ -5,19 +5,28 @@ import lief
 import argparse
 
 lib_exceptions = [ "libc.so.6" ]
+lib_dirs = os.environ['LD_LIBRARY_PATH'].split(os.pathsep)
+
+def find_lib(filename):
+    for lib_dir in lib_dirs:
+        path = os.path.join(lib_dir, filename)
+        if os.path.exists(path):
+            return path
+    raise
 
 def merge(path):
     # Parse the binary
     binary = lief.parse(path)
+    imported_libs_filename = binary.libraries
+    imported_symbols = [symbol.name for symbol in binary.imported_symbols]
 
     # Get and Parse its libraries
-    imported_libs_filename = binary.libraries
     print("Imported libs: {}".format(imported_libs_filename))
     libs = list()
     for lib_name in imported_libs_filename:
         if lib_name in lib_exceptions:
             continue
-        lib_path = os.path.join('/usr/lib', lib_name)
+        lib_path = find_lib(lib_name)
         lib = lief.parse(lib_path)
         libs.append(lib)
     print("Loaded {} libs".format(len(libs)))
@@ -31,7 +40,11 @@ def merge(path):
                 if segment.has(lief.ELF.SEGMENT_FLAGS.X):
                     code_segment = segment_address
         # Relocate the symbols
-
+        for symbol_name in imported_symbols:
+            if lib.has_symbol(symbol_name):
+                hook_symbol = lib.get_symbol(symbol_name)
+                symbol = binary.get_symbol(symbol_name)
+                symbol = code_segment.virtual_address + hook_symbol.value
 
     # Drop the imported libraries
     for lib in libs:
