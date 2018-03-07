@@ -6,6 +6,9 @@ import argparse
 
 lib_exceptions = [ "libc.so.6" ]
 lib_dirs = os.environ['LD_LIBRARY_PATH'].split(os.pathsep)
+lib_dirs.append('/usr/lib')
+lib_dirs.append('/lib')
+
 
 def find_lib(filename):
     for lib_dir in lib_dirs:
@@ -32,6 +35,7 @@ def merge(path):
     print("Loaded {} libs".format(len(libs)))
 
     for lib in libs:
+        print("Merging", lib.name)
         code_segment = None
         # Merge the LOAD sections
         for segment in lib.segments:
@@ -42,9 +46,13 @@ def merge(path):
         # Relocate the symbols
         for symbol_name in imported_symbols:
             if lib.has_symbol(symbol_name):
-                hook_symbol = lib.get_symbol(symbol_name)
-                symbol = binary.get_symbol(symbol_name)
-                symbol = code_segment.virtual_address + hook_symbol.value
+                lib_symbol = lib.get_symbol(symbol_name)
+                if lib_symbol.exported:
+                    hook_symbol = lib.get_symbol(symbol_name)
+                    symbol = binary.get_symbol(symbol_name)
+                    symbol = code_segment.virtual_address + hook_symbol.value
+                    binary.remove_dynamic_symbol(symbol_name)
+                    print("Dynamic symbol removed:", symbol_name)
 
     # Drop the imported libraries
     for lib in libs:
