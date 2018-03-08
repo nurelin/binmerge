@@ -4,8 +4,11 @@ import os
 import lief
 import argparse
 
-lib_exceptions = [ "libc.so.6" ]
-lib_dirs = os.environ['LD_LIBRARY_PATH'].split(os.pathsep)
+lib_exceptions = [ "libc.so.6", "libc.so" ]
+if 'LD_LIBRARY_PATH' in os.environ:
+    lib_dirs = os.environ['LD_LIBRARY_PATH'].split(os.pathsep)
+else:
+    lib_dirs = list()
 lib_dirs.append('/usr/lib')
 lib_dirs.append('/lib')
 
@@ -51,7 +54,7 @@ def merge(path):
                     hook_symbol = lib.get_symbol(symbol_name)
                     symbol = binary.get_symbol(symbol_name)
                     symbol = code_segment.virtual_address + hook_symbol.value
-                    binary.remove_dynamic_symbol(symbol_name)
+                    binary.remove_symbol(symbol_name)
                     print("Dynamic symbol removed:", symbol_name)
 
     # Drop the imported libraries

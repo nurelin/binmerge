@@ -1,3 +1,6 @@
+CC=musl-gcc
+CFLAGS=-no-pie
+
 all: main
 
 run: main
@@ -10,9 +13,9 @@ clean:
 	$(RM) libfoo.o
 
 main: main.o | libfoo.so
-	$(CC) -L. -lfoo -o $@ $<
+	$(CC) $(CFLAGS) -L. -lfoo -o $@ $<
 
 libfoo.so: libfoo.o
-	$(CC) -shared -o $@ $<
+	$(CC) $(CFLAGS) -shared -o $@ $<
 
 .PHONY: run all clean
