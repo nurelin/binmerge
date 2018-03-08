@@ -9,6 +9,6 @@ binmerge: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
 test_c: binmerge
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):tests/c ./binmerge tests/c/main
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):/home/nurelin/repo/LIEF/output/lib:tests/c ./binmerge tests/c/main
 
 .PHONY: all test_c

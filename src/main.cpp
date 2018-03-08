@@ -88,20 +88,28 @@ void merge(std::string& path)
 		std::cout << "Merging " << lib->name() << std::endl;
 
 		// Merge the LOAD sections
-		Segment *code_segment = nullptr;
-		for (const auto& segment : lib->segments())
-		{
-			if (segment.type() == SEGMENT_TYPES::PT_LOAD)
-			{
-				auto& new_segment = binary->add(segment);
-				if (new_segment.has(ELF_SEGMENT_FLAGS::PF_X))
-				{ code_segment = &new_segment; }
-			}
-		}
+		//Segment *code_segment = nullptr;
+		//for (const auto& segment : lib->segments())
+		//{
+		//	if (segment.type() == SEGMENT_TYPES::PT_LOAD)
+		//	{
+		//		auto& new_segment = binary->add(segment);
+		//		if (new_segment.has(ELF_SEGMENT_FLAGS::PF_X))
+		//		{ code_segment = &new_segment; }
+		//	}
+		//}
 
 		// Relocate the symbols
-		for  (const auto& symbol : binary->imported_symbols())
+		for  (const auto& import_symbol : binary->imported_symbols())
 		{
+			for (const auto& export_symbol : lib->exported_symbols())
+			{
+				if (import_symbol.demangled_name() == export_symbol.demangled_name())
+				{
+					binary->remove_dynamic_symbol(import_symbol.demangled_name());
+					break;
+				}
+			}
 		}
 	}
 
